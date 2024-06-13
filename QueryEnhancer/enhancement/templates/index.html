@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Query Enhancer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        header, footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 10px 0;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+        input[type="text"], button {
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .query-result, .articles {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+        .article {
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+        }
+        .article img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Query Enhancer and Article Retrieval</h1>
+    </header>
+    <div class="container">
+        <form id="queryForm" method="post">
+            {% csrf_token %}
+            <input type="text" name="query" placeholder="Enter your query" required>
+            <button type="submit">Enhance Query</button>
+        </form>
+        <div class="query-result">
+            <!-- Original and enhanced queries will be displayed here -->
+        </div>
+        <button id="getArticles" style="display:none;">Get Articles</button>
+        <div class="articles">
+            <!-- Articles will be displayed here -->
+        </div>
+    </div>
+    <footer>
+        <p>&copy; 2024 Query Enhancer. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.getElementById('queryForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var formData = new FormData(this);
+            fetch('/enhance_query/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.querySelector('.query-result').innerHTML = `
+                    <div><strong>Original Query:</strong><p>${data.original_query}</p></div>
+                    <div><strong>Enhanced Query:</strong><p>${data.enhanced_query}</p></div>
+                `;
+                document.getElementById('getArticles').style.display = 'block';
+                document.getElementById('getArticles').onclick = function() {
+                    fetch(`/proxy_newsapi/?query=${encodeURIComponent(data.enhanced_query)}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(articlesData => {
+                        const articlesContainer = document.querySelector('.articles');
+                        articlesContainer.innerHTML = '<h2>Retrieved Articles</h2>';
+                        if (articlesData.articles && articlesData.articles.length > 0) {
+                            articlesData.articles.forEach(article => {
+                                articlesContainer.innerHTML += `
+                                    <div class="article">
+                                        <h3>${article.title}</h3>
+                                        <img src="${article.image_url || ''}" alt="Article Image">
+                                        <p>${article.summary || ''}</p>
+                                        <a href="${article.url}">Read more</a>
+                                    </div>
+                                `;
+                            });
+                        } else {
+                            articlesContainer.innerHTML += '<p>No articles found.</p>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('There was a problem with the fetch operation:', error);
+                    });
+                };
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
+        });
+    </script>
+</body>
+</html>
