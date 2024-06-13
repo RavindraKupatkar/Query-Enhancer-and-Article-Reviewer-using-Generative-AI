@@ -5,7 +5,7 @@ This is a Django web application that enhances user-provided queries using the O
 ## Features
 
 - Enhance user-provided queries using OpenAI GPT-4.
-- Fetch top 10 articles related to the enhanced query from GNewsAPI.
+- Fetch articles related to the enhanced query from NewsAPI.
 - Display original and enhanced queries side-by-side.
 - Display articles with titles, summaries, and images.
 
@@ -14,7 +14,7 @@ This is a Django web application that enhances user-provided queries using the O
 - Python 3.6 or higher
 - Django 3.0 or higher
 - OpenAI API key
-- GNewsAPI key
+- NewsAPI key
 
 ## Important Commands
 - .\env\Scripts\Activate.ps1
